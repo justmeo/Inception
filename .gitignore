@@ -1,0 +1,10 @@
+*.log
+.DS_Store
+
+# Secrets & local env (NEVER COMMIT THESE)
+secrets/*
+srcs/.env
+
+# Docker artifacts
+**/.env.local
+**/.envrc

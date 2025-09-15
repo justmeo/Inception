@@ -1,0 +1,2 @@
+# (kept for future fine-tuning if needed; we already patch via sed in Dockerfile)
+# Example options you can drop here and apply with patch if you prefer.
