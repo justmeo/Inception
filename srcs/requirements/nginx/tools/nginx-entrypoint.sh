@@ -16,7 +16,7 @@ if [ ! -f "$CRT" ] || [ ! -f "$KEY" ]; then
     -subj "/CN=${DOMAIN}"
 fi
 
-# Render server block
+# Write server block: expand ${CRT}/${KEY}, but keep NGINX $vars by escaping $
 cat >/etc/nginx/conf.d/inception.conf <<NGX
 server {
     listen 443 ssl http2;
@@ -39,19 +39,16 @@ server {
     # PHP via php-fpm (WordPress container)
     location ~ \.php$ {
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_pass wordpress:9000;
     }
 
     location / {
-        try_files $uri $uri/ /index.php?$args;
+        try_files \$uri \$uri/ /index.php?\$args;
     }
 }
 NGX
 
-# Disable default site if present
 rm -f /etc/nginx/sites-enabled/default || true
-
-# Test and run
 nginx -t
 exec "$@"

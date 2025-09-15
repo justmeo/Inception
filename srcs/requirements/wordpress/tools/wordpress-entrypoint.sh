@@ -29,13 +29,13 @@ fi
 # Download WordPress on first run
 if [ ! -f wp-load.php ]; then
   echo "[WP] Downloading WordPress core..."
-  sudo -u www-data wp core download --path=/var/www/html --allow-root
+  wp core download --path=/var/www/html --allow-root
 fi
 
 # Create config if missing
 if [ ! -f wp-config.php ]; then
   echo "[WP] Creating wp-config.php"
-  sudo -u www-data wp config create \
+  wp config create \
     --dbname="$DB_NAME" \
     --dbuser="$DB_USER" \
     --dbpass="$DB_PASSWORD" \
@@ -46,9 +46,9 @@ if [ ! -f wp-config.php ]; then
 fi
 
 # Install site if not installed
-if ! sudo -u www-data wp core is-installed --allow-root; then
+if ! wp core is-installed --allow-root; then
   echo "[WP] Installing site at ${SITE_URL}"
-  sudo -u www-data wp core install \
+  wp core install \
     --url="${SITE_URL}" \
     --title="${WP_TITLE:-Inception}" \
     --admin_user="${WP_ADMIN_USER}" \
@@ -59,7 +59,7 @@ if ! sudo -u www-data wp core is-installed --allow-root; then
 
   # Create a non-admin user for content
   if [[ -n "${WP_USER:-}" && -n "${WP_USER_EMAIL:-}" ]]; then
-    sudo -u www-data wp user create "$WP_USER" "$WP_USER_EMAIL" --role=author --user_pass=$(cat /run/secrets/db_password) --allow-root || true
+    wp user create "$WP_USER" "$WP_USER_EMAIL" --role=author --user_pass=$(cat /run/secrets/db_password) --allow-root || true
   fi
 fi
 
@@ -69,4 +69,8 @@ find /var/www/html -type d -exec chmod 755 {} \;
 find /var/www/html -type f -exec chmod 644 {} \;
 
 # Exec php-fpm in foreground (PID 1)
-exec "$@"
+if command -v php-fpm >/dev/null 2>&1; then
+  exec php-fpm -F
+else
+  exec php-fpm8.2 -F
+fi
